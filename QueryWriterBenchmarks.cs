@@ -36,7 +36,7 @@ public class QueryWriterBenchmarks
     [Benchmark]
     public async Task WriteToFileOnDiskInBatches()
     {
-        string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars.csv");
+        string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars-batch.csv");
 
         using (var context = new AppDbContext())
         {
@@ -52,7 +52,7 @@ public class QueryWriterBenchmarks
             for (var i = 0; i < numPages; i++)
             {
                 var cars = query.Skip(i).Take(Consts.BatchSize);
-
+                
                 await using var textWriter = new StreamWriter(filePath, true);
                 var csvWriter = new CsvWriter(textWriter, new CsvConfiguration(CultureInfo.InvariantCulture));
                 await csvWriter.WriteRecordsAsync(cars);
