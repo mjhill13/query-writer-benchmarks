@@ -23,7 +23,7 @@ public sealed class AppDbContext : DbContext
             .RuleFor(x => x.Make, f => f.Vehicle.Manufacturer())
             .RuleFor(x => x.Model, f => f.Vehicle.Model());
 
-        modelBuilder.Entity<Car>().HasData(cars.GenerateBetween(500, 1000));
+        modelBuilder.Entity<Car>().HasData(cars.GenerateBetween(Consts.MinCars, Consts.MaxCars));
         base.OnModelCreating(modelBuilder);
     }
 
