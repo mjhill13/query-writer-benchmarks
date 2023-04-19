@@ -18,8 +18,7 @@ public class QueryWriterBenchmarks : IDisposable
     [Benchmark]
     public async Task WriteToFileOnDisk()
     {
-        // string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars.csv");
-        string filePath = "~/dev/cars.csv";
+        string filePath = Path.Combine(Consts.OutputDir, "cars.csv");
 
         var query = _context.Cars
             .AsNoTracking()
@@ -36,7 +35,7 @@ public class QueryWriterBenchmarks : IDisposable
     [Benchmark]
     public async Task WriteToFileOnDiskInBatches()
     {
-        string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars-batch.csv");
+        string filePath = Path.Combine(Consts.OutputDir, "cars-batch.csv");
         
         var query = _context.Cars
             .AsNoTracking()
@@ -60,8 +59,7 @@ public class QueryWriterBenchmarks : IDisposable
     [Benchmark]
     public async Task WriteToFileOnDiskWithQueryable()
     {
-        // string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars-queryable.csv");
-        string filePath = "~/dev/cars-queryable.csv";
+        string filePath = Path.Combine(Consts.OutputDir, "cars-queryable.csv");
         
         var query = _context.Cars
             .AsNoTracking()
