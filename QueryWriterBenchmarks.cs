@@ -33,7 +33,7 @@ public class QueryWriterBenchmarks : IDisposable
         await csvWriter.WriteRecordsAsync(cars);
     }
     
-    // [Benchmark]
+    [Benchmark]
     public async Task WriteToFileOnDiskInBatches()
     {
         string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars-batch.csv");
