@@ -5,11 +5,6 @@ namespace WriteQueryTos3;
 
 public sealed class AppDbContext : DbContext
 {
-    public AppDbContext()
-    {
-        Database.EnsureCreated();    
-    }
-    
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseInMemoryDatabase(databaseName: "AppDb");

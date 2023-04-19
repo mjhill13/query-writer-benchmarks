@@ -11,21 +11,45 @@ namespace WriteQueryTos3;
 [MemoryDiagnoser]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [RankColumn]
-public class QueryWriterBenchmarks
+public class QueryWriterBenchmarks : IDisposable
 {
+    private readonly AppDbContext _context = new();
+    
     [Benchmark]
     public async Task WriteToFileOnDisk()
     {
-        string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars.csv");
+        // string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars.csv");
+        string filePath = "~/dev/cars.csv";
 
-        using (var context = new AppDbContext())
+        var query = _context.Cars
+            .AsNoTracking()
+            .OrderBy(x => x.Make)
+            .ThenBy(x => x.Model);
+
+        var cars = await query.ToListAsync();
+        
+        await using var textWriter = new StreamWriter(filePath, true);
+        var csvWriter = new CsvWriter(textWriter, new CsvConfiguration(CultureInfo.InvariantCulture));
+        await csvWriter.WriteRecordsAsync(cars);
+    }
+    
+    // [Benchmark]
+    public async Task WriteToFileOnDiskInBatches()
+    {
+        string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars-batch.csv");
+        
+        var query = _context.Cars
+            .AsNoTracking()
+            .OrderBy(x => x.Make)
+            .ThenBy(x => x.Model);
+
+        var totalCount = await query.CountAsync();
+        
+        var numPages = (totalCount + Consts.BatchSize) / Consts.BatchSize;
+
+        for (var i = 0; i < numPages; i++)
         {
-            var query = context.Cars
-                .AsNoTracking()
-                .OrderBy(x => x.Make)
-                .ThenBy(x => x.Model);
-
-            var cars = await query.ToListAsync();
+            var cars = query.Skip(i).Take(Consts.BatchSize);
             
             await using var textWriter = new StreamWriter(filePath, true);
             var csvWriter = new CsvWriter(textWriter, new CsvConfiguration(CultureInfo.InvariantCulture));
@@ -34,29 +58,23 @@ public class QueryWriterBenchmarks
     }
     
     [Benchmark]
-    public async Task WriteToFileOnDiskInBatches()
+    public async Task WriteToFileOnDiskWithQueryable()
     {
-        string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars-batch.csv");
+        // string filePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "cars-queryable.csv");
+        string filePath = "~/dev/cars-queryable.csv";
+        
+        var query = _context.Cars
+            .AsNoTracking()
+            .OrderBy(x => x.Make)
+            .ThenBy(x => x.Model);
+        
+        await using var textWriter = new StreamWriter(filePath, true);
+        var csvWriter = new CsvWriter(textWriter, new CsvConfiguration(CultureInfo.InvariantCulture));
+        foreach (var car in query) csvWriter.WriteRecord(car);
+    }
 
-        using (var context = new AppDbContext())
-        {
-            var query = context.Cars
-                .AsNoTracking()
-                .OrderBy(x => x.Make)
-                .ThenBy(x => x.Model);
-
-            var totalCount = await query.CountAsync();
-            
-            var numPages = (totalCount + Consts.BatchSize) / Consts.BatchSize;
-
-            for (var i = 0; i < numPages; i++)
-            {
-                var cars = query.Skip(i).Take(Consts.BatchSize);
-                
-                await using var textWriter = new StreamWriter(filePath, true);
-                var csvWriter = new CsvWriter(textWriter, new CsvConfiguration(CultureInfo.InvariantCulture));
-                await csvWriter.WriteRecordsAsync(cars);
-            }
-        }
+    public void Dispose()
+    {
+        _context.Dispose();
     }
 }
